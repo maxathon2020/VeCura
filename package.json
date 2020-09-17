@@ -1,0 +1,37 @@
+{
+  "name": "digital-healt-wallet-backend",
+  "version": "1.0.0",
+  "description": "This repo is dedicated for the backend part of the Track-2 usecase for Maxonrow hackathon.",
+  "main": "index.js",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "http": "^0.0.1-security",
+    "log4js": "^6.3.0",
+    "mxw-sdk-js": "^1.0.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/maxathon2020/COST-COvid-Surveillance-Team.git"
+  },
+  "keywords": [
+    "maxonrow-blockchain",
+    "maxonrow",
+    "maxathon",
+    "blockchain",
+    "mongodb",
+    "hyperldeger",
+    "permissioned-blockchain"
+  ],
+  "author": "Harish Kumar Gunjalli, Satya Venkata Medhi",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/maxathon2020/COST-COvid-Surveillance-Team/issues"
+  },
+  "homepage": "https://github.com/maxathon2020/COST-COvid-Surveillance-Team#readme"
+}
