@@ -69,7 +69,6 @@ app.post('/digital-wallet/v1.0/createNft', async function(req, res) {
     var properties = req.body.properties;
     var metadata = req.body.metadata;
     var feeCollector = req.body.feeCollector;
-    var endorserList = req.body.endorserList;
     // Sanity checking.
     if(!symbol)
     {
@@ -101,21 +100,22 @@ app.post('/digital-wallet/v1.0/createNft', async function(req, res) {
 
 app.post('/digital-wallet/v1.0/authorizeNft', async function(req, res) {
     var provider = req.body.provider;
-    var middleWare = req.body.middleWare;
+    var middleware = req.body.middleware;
     var endorserList = req.body.endorserList;
     var mintLimit = req.body.mintLimit;
     var transferLimit = req.body.transferLimit;
     var burnable = req.body.burnable;
     var pub = req.body.public;
     var symbol = req.body.symbol;
+
     if(!provider)
     {
         res.json(getErrorMessage('provider'));
         return;
     }
-    if(!middleWare)
+    if(!middleware)
     {
-        res.json(getErrorMessage('middleWare'));
+        res.json(getErrorMessage('middleware'));
         return;
     }
     if(!endorserList){
@@ -143,9 +143,8 @@ app.post('/digital-wallet/v1.0/authorizeNft', async function(req, res) {
         return;
     }
 
-    let message = await mxw.authorizeNft(provider, middleWare, endorserList, mintLimit, transferLimit, burnable, pub, symbol);
-    res.statusCode = message.status;
-    res.send(message);
+    mxw.authorizeNft(provider, middleware, endorserList, mintLimit, transferLimit, burnable, pub, symbol, res);
+    
 })
 
 app.post('/digital-wallet/v1.0/mintNft', async function(req, res) {
@@ -174,9 +173,8 @@ app.post('/digital-wallet/v1.0/mintNft', async function(req, res) {
         return;
     }
 
-    let message = await mxw.mintNftTokens(symbol, itemId, properties, metadata);
-    res.statusCode = message.status;
-    res.send(message);
+    mxw.mintNftTokens(symbol, itemId, properties, metadata, res);
+    
 })
 
 app.post('/digital-wallet/v1.0/transferNft', async function(req, res) {

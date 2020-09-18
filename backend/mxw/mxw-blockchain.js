@@ -14,6 +14,7 @@ logger.level = 'trace'
 let issuer = mxw.Wallet;
 let provider = mxw.Wallet; 
 let middleware = mxw.Wallet;
+let kycWallet = mxw.Wallet;
 let nodeProvider = network.nodeProvider;
 let providerConnection;
 
@@ -29,6 +30,7 @@ var intialiseWallets = async function() {
     issuer = mxw.Wallet.fromMnemonic(nodeProvider.nonFungibleToken.issuer).connect(providerConnection);
     provider = mxw.Wallet.fromMnemonic(nodeProvider.nonFungibleToken.provider).connect(providerConnection);
     middleware = mxw.Wallet.fromMnemonic(nodeProvider.nonFungibleToken.middleware).connect(providerConnection);
+    kycWallet = mxw.Wallet.fromMnemonic(nodeProvider.kyc.issuer).connect(providerConnection);
     logger.info('Done fetching the wallet details');
 }
 
@@ -63,8 +65,6 @@ var createNft = async function(symbol, name, properties, metadata, feeCollector,
                 to: feeCollector,
                 value: utils.bigNumberify("1")
             },
-            endorserList: [],
-            endorserListLimit: 10,
             properties: properties,
             metadata: metadata
         }
@@ -99,7 +99,7 @@ var createNft = async function(symbol, name, properties, metadata, feeCollector,
     }
 }
 
-var authorizeNft = async function(providerAddress, middleWareAddress, endorserList, mintLimit, transferLimit, burable, pub, symbol) {
+var authorizeNft = async function(providerAddress, middlewareAddress, endorserList, mintLimit, transferLimit, burable, pub, symbol, res) {
     // Validate if the wallet details obtained are right.
     var resp = {
         success: true,
@@ -110,14 +110,16 @@ var authorizeNft = async function(providerAddress, middleWareAddress, endorserLi
     if(providerAddress != provider.address) {
         resp.success = false;
         resp.message = 'Invalid provider address.';
-        resp.status = 401
-        return resp;
+        resp.status = 401;
+        res.statuCode = resp.status;
+        res.send(resp);
     }
-    if(middleWareAddress != middleware.address) {
+    if(middlewareAddress != middleware.address) {
         resp.success = false;
         resp.message = 'Invalid provider address.';
         resp.status = 401;
-        return resp;
+        res.statuCode = resp.status;
+        res.send(resp);
     }
 
     var tokenState = {
@@ -127,56 +129,65 @@ var authorizeNft = async function(providerAddress, middleWareAddress, endorserLi
             {action: nftToken.nonFungibleToken.NonFungibleTokenActions.acceptOwnership, feeName: "default"}
         ],
         endorserList: endorserList,
+        endorserListLimit: 10,
         mintLimit: mintLimit,
         transferLimit: transferLimit,
         burnable: burable,
-        pub: pub
+        pub: false
     }
-
     nftToken.nonFungibleToken.NonFungibleToken.approveNonFungibleToken(symbol, provider, tokenState).then((transaction) => {
         nftToken.nonFungibleToken.NonFungibleToken.signNonFungibleTokenStatusTransaction(transaction, issuer).then((transaction) => {
-            nftToken.nonFungibleToken.NonFungibleToken.signNonFungibleTokenStatusTransaction(transaction, middleWare).then((receipt) => {
-                return resp;
+            nftToken.nonFungibleToken.NonFungibleToken.signNonFungibleTokenStatusTransaction(transaction, middleware).then((receipt) => {
+                console.log(JSON.stringify(receipt))
+                resp.details = receipt;
+                res.send(resp);
             }).catch((error) => {
                 resp.success = false;
                 resp.status = 400;
                 resp.message = String(error);
-                return resp;
+                res.statuCode = resp.status;
+                res.send(resp);
             })
         }).catch((error) => {
             resp.message = String(error);
             resp.success = false;
             resp.status = 400;
-            return resp;
+            res.statuCode = resp.status;
+            res.send(resp);
         })
     }).catch((error) => {
         resp.message = String(error);
         resp.success = false;
         res.status = 400;
-        return resp;
+        res.statuCode = resp.status;
+        res.send(resp);
     })    
 }
 
-var mintNftTokens = async function(symbol, itemId, properties, metadata) {
+var mintNftTokens = async function(symbol, itemId, properties, metadata, res) {
     var resp = {
         success: true,
         message: 'Successfully authorized.',
         status: 200
     }
-    let mintToken = {
+    const mintToken = {
         symbol: symbol,
-        itemId: itemId,
+        itemID: itemId,
         properties: properties,
         metadata: metadata
-    }
+    } 
 
-    let minter = new nftToken.nonFungibleToken.NonFungibleToken(symbol, issuer);
+    let minter = new nftToken.nonFungibleToken.NonFungibleToken(symbol, kycWallet);
     minter.mint(issuer.address, mintToken).then((transaction) => {
-        return(resp);
+        resp.details = transaction;
+        res.send(resp);
     }).catch((error) => {
         resp.status = 400;
         resp.success = false;
         resp.message = 'Something went wrong. Please check the details provided.';
+        resp.details = error;
+        res.statusCode = resp.status;
+        res.send(resp);
     })
 }
 
