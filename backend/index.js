@@ -152,6 +152,7 @@ app.post('/digital-wallet/v1.0/mintNft', async function(req, res) {
     var itemId = req.body.itemId;
     var properties = req.body.properties;
     var metadata = req.body.metadata;
+    var walletId = req.body.walletId;
     if(!symbol)
     {
         res.json(getErrorMessage('symbol'));
@@ -172,8 +173,12 @@ app.post('/digital-wallet/v1.0/mintNft', async function(req, res) {
         res.json(getErrorMessage('metadata'));
         return;
     }
+    if(!walletId){
+        res.json(getErrorMessage('walletId'));
+        return;
+    }
 
-    mxw.mintNftTokens(symbol, itemId, properties, metadata, res);
+    mxw.mintNftTokens(symbol, itemId, walletId, properties, metadata, res);
     
 })
 
@@ -202,8 +207,5 @@ app.post('/digital-wallet/v1.0/transferNft', async function(req, res) {
         res.json(getErrorMessage('issuerAddress'));
         return;
     }
-
-    let message = await mxw.transferNftOwnership(walletId, symbol, itemId, issuerAddress);
-    res.statusCode = message.status;
-    res.send(message);
+    mxw.transferNftOwnership(walletId, symbol, itemId, issuerAddress, res);
 })

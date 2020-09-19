@@ -68,7 +68,6 @@ var createNft = async function(symbol, name, properties, metadata, feeCollector,
             properties: properties,
             metadata: metadata
         }
-        var token = new ex.NonFungibleToken(symbol, provider);
         nftToken.nonFungibleToken.NonFungibleToken.create(nftProps, provider).then((token) => {
             var resp = {
                 success: true,
@@ -85,7 +84,7 @@ var createNft = async function(symbol, name, properties, metadata, feeCollector,
                 message: 'Something went wrong',
                 details: String(error)
             };
-            res.statuCode = resp.status;
+            res.statusCode = resp.status;
             res.send(resp);
         })
     }
@@ -111,14 +110,14 @@ var authorizeNft = async function(providerAddress, middlewareAddress, endorserLi
         resp.success = false;
         resp.message = 'Invalid provider address.';
         resp.status = 401;
-        res.statuCode = resp.status;
+        res.statusCode = resp.status;
         res.send(resp);
     }
     if(middlewareAddress != middleware.address) {
         resp.success = false;
         resp.message = 'Invalid provider address.';
         resp.status = 401;
-        res.statuCode = resp.status;
+        res.statusCode = resp.status;
         res.send(resp);
     }
 
@@ -137,7 +136,7 @@ var authorizeNft = async function(providerAddress, middlewareAddress, endorserLi
     }
     nftToken.nonFungibleToken.NonFungibleToken.approveNonFungibleToken(symbol, provider, tokenState).then((transaction) => {
         nftToken.nonFungibleToken.NonFungibleToken.signNonFungibleTokenStatusTransaction(transaction, issuer).then((transaction) => {
-            nftToken.nonFungibleToken.NonFungibleToken.signNonFungibleTokenStatusTransaction(transaction, middleware).then((receipt) => {
+            nftToken.nonFungibleToken.NonFungibleToken.sendNonFungibleTokenStatusTransaction(transaction, middleware).then((receipt) => {
                 console.log(JSON.stringify(receipt))
                 resp.details = receipt;
                 res.send(resp);
@@ -145,26 +144,26 @@ var authorizeNft = async function(providerAddress, middlewareAddress, endorserLi
                 resp.success = false;
                 resp.status = 400;
                 resp.message = String(error);
-                res.statuCode = resp.status;
+                res.statusCode = resp.status;
                 res.send(resp);
             })
         }).catch((error) => {
             resp.message = String(error);
             resp.success = false;
             resp.status = 400;
-            res.statuCode = resp.status;
+            res.statusCode = resp.status;
             res.send(resp);
         })
     }).catch((error) => {
         resp.message = String(error);
         resp.success = false;
         res.status = 400;
-        res.statuCode = resp.status;
+        res.statusCode = resp.status;
         res.send(resp);
     })    
 }
 
-var mintNftTokens = async function(symbol, itemId, properties, metadata, res) {
+var mintNftTokens = async function(symbol, itemId, walletId, properties, metadata, res) {
     var resp = {
         success: true,
         message: 'Successfully authorized.',
@@ -176,9 +175,9 @@ var mintNftTokens = async function(symbol, itemId, properties, metadata, res) {
         properties: properties,
         metadata: metadata
     } 
-
-    let minter = new nftToken.nonFungibleToken.NonFungibleToken(symbol, kycWallet);
-    minter.mint(issuer.address, mintToken).then((transaction) => {
+    //let wallet = mxw.Wallet.fromMnemonic("prevent always stomach plate thunder staff car program melody brass lawn library few soul weasel mad fog rival analyst decline tail measure result donkey");
+    let minter = new nftToken.nonFungibleToken.NonFungibleToken(symbol, provider);
+    minter.mint(walletId, mintToken).then((transaction) => {
         resp.details = transaction;
         res.send(resp);
     }).catch((error) => {
@@ -191,32 +190,41 @@ var mintNftTokens = async function(symbol, itemId, properties, metadata, res) {
     })
 }
 
-var transferNftOwnership = async function(walletId, symbol, itemId, issuerAddress) {
-    var resp = {
-        success: true,
-        status: 200,
-        message: 'Transfer successful'
-    }
-    if(issuerAddress != issuer.address){
-        resp.success = false;
-        resp.status = 401;
-        resp.message = 'Invalid Issuer.'
-        return resp;
-    }
+// Will check this later as we can mint the token directly to the participant.
+// var transferNftOwnership = async function(walletId, symbol, itemId, issuerAddress, res) {
+//     var resp = {
+//         success: true,
+//         status: 200,
+//         message: 'Transfer successful'
+//     }
+//     // if(issuerAddress != issuer.address){
+//     //     resp.success = false;
+//     //     resp.status = 401;
+//     //     resp.message = 'Invalid Issuer.'
+//     //     return resp;
+//     // }
 
-    let nftItem = new nftTokenItem.NonFungibleTokenItem(symbol, itemId, issuer);
-    nftItem.transfer(walletId).then((transaction) => {
-        return resp;
-    }).catch((error) => {
-        resp.message = 'Unable to transfer Token' + String(error);
-        resp.status = 500;
-        resp.success = false;
-        return resp;
-    })
-}
+//     let w = mxw.Wallet.fromMnemonic("language indoor mushroom gold motor genuine tower ripple baby journey where offer crumble chuckle velvet dizzy trigger owner mother screen panic question cliff dish").connect(providerConnection);
+
+//     let nftItem = nftTokenItem.NonFungibleTokenItem.fromSymbol(symbol, itemId, w);
+    
+    
+//     nftItem.transfer(walletId).then((transaction) => {
+//         resp.details = transaction;
+//         res.statusCode = resp.statusCode;
+//         res.send(resp);
+//     }).catch((error) => {
+//         resp.message = 'Unable to transfer Token' + String(error);
+//         resp.status = 500;
+//         resp.success = false;
+//         resp.details = error;
+//         res.statusCode = resp.status;
+//         res.send(resp);
+//     })
+// }
 
 
-exports.transferNftOwnership = transferNftOwnership;
+//exports.transferNftOwnership = transferNftOwnership;
 exports.mintNftTokens = mintNftTokens;
 exports.authorizeNft = authorizeNft;
 exports.createNft = createNft;
