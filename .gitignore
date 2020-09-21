@@ -14,3 +14,4 @@ node_modules/
 *.tgz
 
 asyncTest.js
+.DS_Store

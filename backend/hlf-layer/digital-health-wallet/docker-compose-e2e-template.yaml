@@ -1,0 +1,133 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+version: '2'
+
+volumes:
+  orderer.example.com:
+  peer0.government.example.com:
+  peer1.government.example.com:
+  peer0.laboratory.example.com:
+  peer1.laboratory.example.com:
+
+
+networks:
+  byfn:
+services:
+  ca.government.example.com:
+    image: hyperledger/fabric-ca:$IMAGE_TAG
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca_peerGovernment
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.government.example.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/Government_CA_PRIVATE_KEY
+    ports:
+      - "7054:7054"
+    command: sh -c 'fabric-ca-server start --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.government.example.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/Government_CA_PRIVATE_KEY -b admin:adminpw -d'
+    volumes:
+      - ./crypto-config/peerOrganizations/government.example.com/ca/:/etc/hyperledger/fabric-ca-server-config
+      - ./artifacts/ca-config/government/fabric-ca-server-config.yaml:/etc/hyperledger/fabric-ca-server/fabric-ca-server-config.yaml
+    container_name: ca_peerGovernment
+    networks:
+      - byfn
+
+  ca.laboratory.example.com:
+    image: hyperledger/fabric-ca:$IMAGE_TAG
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca_peerLaboratory
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.laboratory.example.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/Laboratory_CA_PRIVATE_KEY
+    ports:
+      - "8054:7054"
+    command: sh -c 'fabric-ca-server start --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.laboratory.example.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/Laboratory_CA_PRIVATE_KEY -b admin:adminpw -d'
+    volumes:
+      - ./crypto-config/peerOrganizations/laboratory.example.com/ca/:/etc/hyperledger/fabric-ca-server-config
+      - ./artifacts/ca-config/laboratory/fabric-ca-server-config.yaml:/etc/hyperledger/fabric-ca-server/fabric-ca-server-config.yaml
+    container_name: laboratory
+    networks:
+      - byfn
+
+  orderer.example.com:
+    extends:
+      file:   base/docker-compose-base.yaml
+      service: orderer.example.com
+    container_name: orderer.example.com
+    networks:
+      - byfn
+
+  couchdb0:
+    container_name: couchdb0
+    image: hyperledger/fabric-couchdb
+    # Populate the COUCHDB_USER and COUCHDB_PASSWORD to set an admin user and password
+    # for CouchDB.  This will prevent CouchDB from operating in an "Admin Party" mode.
+    environment:
+      - COUCHDB_USER=
+      - COUCHDB_PASSWORD=
+    # Comment/Uncomment the port mapping if you want to hide/expose the CouchDB service,
+    # for example map it to utilize Fauxton User Interface in dev environments.
+    ports:
+      - "5984:5984"
+    networks:
+      - byfn
+
+  peer0.government.example.com:
+    container_name: peer0.government.example.com
+    environment:
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb0:5984
+    extends:
+      file:  base/docker-compose-base.yaml
+      service: peer0.government.example.com
+    networks:
+      - byfn
+    depends_on:
+      - couchdb0
+
+  peer1.government.example.com:
+    container_name: peer1.government.example.com
+    extends:
+      file:  base/docker-compose-base.yaml
+      service: peer1.government.example.com
+    networks:
+      - byfn
+
+  couchdb1:
+    container_name: couchdb1
+    image: hyperledger/fabric-couchdb
+    # Populate the COUCHDB_USER and COUCHDB_PASSWORD to set an admin user and password
+    # for CouchDB.  This will prevent CouchDB from operating in an "Admin Party" mode.
+    environment:
+      - COUCHDB_USER=
+      - COUCHDB_PASSWORD=
+    # Comment/Uncomment the port mapping if you want to hide/expose the CouchDB service,
+    # for example map it to utilize Fauxton User Interface in dev environments.
+    ports:
+      - "6984:5984"
+    networks:
+      - byfn
+
+  peer0.laboratory.example.com:
+    container_name: peer0.laboratory.example.com
+    environment:
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb1:5984
+    extends:
+      file:  base/docker-compose-base.yaml
+      service: peer0.laboratory.example.com
+    networks:
+      - byfn
+    depends_on:
+      - couchdb1
+
+  peer1.laboratory.example.com:
+    container_name: peer1.laboratory.example.com
+    extends:
+      file:  base/docker-compose-base.yaml
+      service: peer1.laboratory.example.com
+    networks:
+      - byfn

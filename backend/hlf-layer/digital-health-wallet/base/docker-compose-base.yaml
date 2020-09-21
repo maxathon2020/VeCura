@@ -1,0 +1,109 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+version: '2'
+
+services:
+
+  orderer.example.com:
+    container_name: orderer.example.com
+    extends:
+      file: peer-base.yaml
+      service: orderer-base
+    volumes:
+        - ../channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+        - ../crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp:/var/hyperledger/orderer/msp
+        - ../crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/:/var/hyperledger/orderer/tls
+        - orderer.example.com:/var/hyperledger/production/orderer
+    ports:
+      - 7050:7050
+
+  peer0.government.example.com:
+    container_name: peer0.government.example.com
+    extends:
+      file: peer-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer0.government.example.com
+      - CORE_PEER_ADDRESS=peer0.government.example.com:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.government.example.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.government.example.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.government.example.com:7051
+      - CORE_PEER_LOCALMSPID=GovernmentMSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/government.example.com/peers/peer0.government.example.com/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/government.example.com/peers/peer0.government.example.com/tls:/etc/hyperledger/fabric/tls
+        - peer0.government.example.com:/var/hyperledger/production
+    ports:
+      - 7051:7051
+
+  peer1.government.example.com:
+    container_name: peer1.government.example.com
+    extends:
+      file: peer-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer1.government.example.com
+      - CORE_PEER_ADDRESS=peer1.government.example.com:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer1.government.example.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.government.example.com:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.government.example.com:7051
+      - CORE_PEER_LOCALMSPID=GovernmentMSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/government.example.com/peers/peer1.government.example.com/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/government.example.com/peers/peer1.government.example.com/tls:/etc/hyperledger/fabric/tls
+        - peer1.government.example.com:/var/hyperledger/production
+
+    ports:
+      - 8051:7051
+
+  peer0.laboratory.example.com:
+    container_name: peer0.laboratory.example.com
+    extends:
+      file: peer-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer0.laboratory.example.com
+      - CORE_PEER_ADDRESS=peer0.laboratory.example.com:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.laboratory.example.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.laboratory.example.com:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.laboratory.example.com:7051
+      - CORE_PEER_LOCALMSPID=LaboratoryMSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/laboratory.example.com/peers/peer0.laboratory.example.com/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/laboratory.example.com/peers/peer0.laboratory.example.com/tls:/etc/hyperledger/fabric/tls
+        - peer0.laboratory.example.com:/var/hyperledger/production
+    ports:
+      - 9051:7051
+
+  peer1.laboratory.example.com:
+    container_name: peer1.laboratory.example.com
+    extends:
+      file: peer-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer1.laboratory.example.com
+      - CORE_PEER_ADDRESS=peer1.laboratory.example.com:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer1.laboratory.example.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.laboratory.example.com:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.laboratory.example.com:7051
+      - CORE_PEER_LOCALMSPID=LaboratoryMSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/laboratory.example.com/peers/peer1.laboratory.example.com/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/laboratory.example.com/peers/peer1.laboratory.example.com/tls:/etc/hyperledger/fabric/tls
+        - peer1.laboratory.example.com:/var/hyperledger/production
+    ports:
+      - 10051:7051
